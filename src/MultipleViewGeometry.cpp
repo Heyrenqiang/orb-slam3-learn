@@ -38,6 +38,7 @@ namespace ORBSLAM
         vector<bool> vb_cur_match_inline;
         float score = 0.0;
         float cur_score;
+        int ncurinline;
 
         for (int i = 0; i < itration_num; i++)
         {
@@ -49,14 +50,16 @@ namespace ORBSLAM
             }
             Mat F = ComputeF(vp1_forF, vp2_forF);
             tmp_F21 = T2t * F * T1;
-            cur_score = Check_fundamental(tmp_F21,v_p2f1,v_p2f2,vb_cur_match_inline,ninliners,mf_sigma);
+            cur_score = Check_fundamental(tmp_F21,v_p2f1,v_p2f2,vb_cur_match_inline,ncurinline,mf_sigma);
             if (cur_score > score)
             {
                 F21 = tmp_F21.clone();
                 vb_match_inline = vb_cur_match_inline;
+                ninliners = ncurinline;
                 score = cur_score;
             }
         }
+        cout<<"num inline:"<<ninliners<<endl;
     }
 
     void MultipleViewGeometry::Normalize(vector<Point2f> &v_p2f, vector<Point2f> &v_np2f, Mat &T)

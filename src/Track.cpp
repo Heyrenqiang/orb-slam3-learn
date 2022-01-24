@@ -38,26 +38,27 @@ namespace ORBSLAM
         vector<int> avaliable_indices;
         for (int i = 0; i < n; i++)
         {
-            all_indices.push_back(i);
+            all_indices[i] = i;
         }
-        vector < vector < int >> candidates = vector<vector<int>>(mi_itration_num, vector<int>(8, 0));
+        vector<vector<int>> candidates = vector<vector<int>>(mi_itration_num, vector<int>(8, 0));
+        srand((unsigned)time(NULL));
         for (int it = 0; it < mi_itration_num; it++)
         {
             avaliable_indices = all_indices;
-            srand((unsigned)time(NULL));
-            for(int j=0;j<8;j++){
-                int randi = rand()%(avaliable_indices.size());
+
+            for (int j = 0; j < 8; j++)
+            {
+                int randi = rand() % (avaliable_indices.size());
                 int idx = avaliable_indices[randi];
                 candidates[it][j] = idx;
                 avaliable_indices[randi] = avaliable_indices.back();
                 avaliable_indices.pop_back();
             }
         }
-        vector<bool> vb_inlineesH,vb_inlineesF;
-        int ninlinersH,ninlinersF;
-        Mat H21,F21;
-        mp_multipleviewgeometry->Find_fundamental(v_kps1,v_kps2,matches12,mi_itration_num,candidates,F21,vb_inlineesF,ninlinersF);
-
+        vector<bool> vb_inlineesH, vb_inlineesF;
+        int ninlinersH, ninlinersF;
+        Mat H21, F21;
+        mp_multipleviewgeometry->Find_fundamental(v_kps1, v_kps2, matches12, mi_itration_num, candidates, F21, vb_inlineesF, ninlinersF);
 
         return true;
     }
