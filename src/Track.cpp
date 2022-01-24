@@ -59,7 +59,7 @@ namespace ORBSLAM
         int ninlinersH, ninlinersF;
         Mat H21, F21;
         mp_multipleviewgeometry->Find_fundamental(v_kps1, v_kps2, matches12, mi_itration_num, candidates, F21, vb_inlineesF, ninlinersF);
-
+        cout<<"ninlinersF"<<ninlinersF<<endl;
         return true;
     }
 }
