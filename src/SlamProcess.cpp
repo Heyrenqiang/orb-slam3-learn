@@ -6,7 +6,7 @@ namespace ORBSLAM
         mp_orbfeature = new ORBFeature(1.2, 8);
         mp_matcher = new Matcher();
         mp_matcher->Set_find_match_parameters(30, 0.5, true, 120);
-        mp_tracker = new Track(2);
+        mp_tracker = new Track();
         mb_mono_initialized = false;
         mb_initial_frame_ready = false;
     }
@@ -43,7 +43,7 @@ namespace ORBSLAM
                 Mat R21,t21;
                 vector<bool> vb_triangulated;
                 if(mp_tracker->Mono_initial_two_frame(mF_initial_frame.mv_orb_unkeypoints,mF_curframe.mv_orb_unkeypoints,mvi_initial_matches,R21,t21,mvp3f_initial3d,vb_triangulated)){
-
+                    cout<<"yes............"<<endl;
                 }
                 // im2 = im.clone();
 

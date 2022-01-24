@@ -18,6 +18,10 @@ opencv2/opencv.hpp
 ../include/Frame.hpp
 /home/heyrenqiang/vscode/test/include/Frame.hpp
 
+/home/heyrenqiang/vscode/test/include/MultipleViewGeometry.hpp
+../include/Typedef.hpp
+/home/heyrenqiang/vscode/test/include/Typedef.hpp
+
 /home/heyrenqiang/vscode/test/include/ORBFeature.hpp
 vector
 -
@@ -53,8 +57,14 @@ opencv2/imgproc/imgproc.hpp
 /home/heyrenqiang/vscode/test/include/Track.hpp
 
 /home/heyrenqiang/vscode/test/include/Track.hpp
-opencv2/opencv.hpp
--
+../include/Typedef.hpp
+/home/heyrenqiang/vscode/test/include/Typedef.hpp
+random
+/home/heyrenqiang/vscode/test/include/random
+ctime
+/home/heyrenqiang/vscode/test/include/ctime
+../include/MultipleViewGeometry.hpp
+/home/heyrenqiang/vscode/test/include/MultipleViewGeometry.hpp
 
 /home/heyrenqiang/vscode/test/include/Typedef.hpp
 opencv2/opencv.hpp
@@ -63,10 +73,6 @@ opencv2/opencv.hpp
 /home/heyrenqiang/vscode/test/src/SlamProcess.cpp
 ../include/SlamProcess.hpp
 /home/heyrenqiang/vscode/test/include/SlamProcess.hpp
-
-/home/heyrenqiang/vscode/test/src/Track.cpp
-../include/Track.hpp
-/home/heyrenqiang/vscode/test/include/Track.hpp
 
 /usr/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp
