@@ -41,8 +41,8 @@ opencv2/imgproc/imgproc.hpp
 /home/heyrenqiang/vscode/test/include/Frame.hpp
 
 /home/heyrenqiang/vscode/test/include/SlamProcess.hpp
-opencv2/opencv.hpp
--
+../include/Typedef.hpp
+/home/heyrenqiang/vscode/test/include/Typedef.hpp
 ../include/Frame.hpp
 /home/heyrenqiang/vscode/test/include/Frame.hpp
 ../include/ORBFeature.hpp
@@ -56,9 +56,17 @@ opencv2/opencv.hpp
 opencv2/opencv.hpp
 -
 
+/home/heyrenqiang/vscode/test/include/Typedef.hpp
+opencv2/opencv.hpp
+-
+
 /home/heyrenqiang/vscode/test/src/SlamProcess.cpp
 ../include/SlamProcess.hpp
 /home/heyrenqiang/vscode/test/include/SlamProcess.hpp
+
+/home/heyrenqiang/vscode/test/src/Track.cpp
+../include/Track.hpp
+/home/heyrenqiang/vscode/test/include/Track.hpp
 
 /usr/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp

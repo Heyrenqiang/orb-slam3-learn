@@ -1,6 +1,6 @@
 #ifndef __SLAMPROCESS_H__
 #define __SLAMPROCESS_H__
-#include <opencv2/opencv.hpp>
+#include "../include/Typedef.hpp"
 #include "../include/Frame.hpp"
 #include "../include/ORBFeature.hpp"
 #include "../include/Matcher.hpp"

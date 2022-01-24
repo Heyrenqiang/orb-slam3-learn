@@ -1,6 +1,6 @@
 #ifndef __TRACK_H__
 #define __TRACK_H__
-#include <opencv2/opencv.hpp>
+#include "../include/Typedef.hpp"
 using namespace std;
 using namespace cv;
 namespace ORBSLAM

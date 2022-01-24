@@ -19,6 +19,7 @@ include/Track.hpp
 include/MultipleViewGeometry.hpp
 include/SlamProcess.hpp
 include/Matcher.hpp
+include/Typedef.hpp
 )
 target_link_libraries(ORBSLAM
 ${OpenCV_LIBS}
