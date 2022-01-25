@@ -7,6 +7,9 @@ namespace ORBSLAM
         mp_matcher = new Matcher();
         mp_matcher->Set_find_match_parameters(30, 0.5, true, 120);
         mp_tracker = new Track();
+        mp_param = new Param();
+        mp_tracker->Set_param(mp_param);
+
         mb_mono_initialized = false;
         mb_initial_frame_ready = false;
     }
@@ -40,6 +43,7 @@ namespace ORBSLAM
                     return;
                 }
                 int nmateches = mp_matcher->Search_for_initialization(mF_initial_frame, mF_curframe, mvp_prematched, mvi_initial_matches, 100);
+                cout<<"nmatches:"<<nmateches<<endl;
                 Mat R21,t21;
                 vector<bool> vb_triangulated;
                 if(mp_tracker->Mono_initial_two_frame(mF_initial_frame.mv_orb_unkeypoints,mF_curframe.mv_orb_unkeypoints,mvi_initial_matches,R21,t21,mvp3f_initial3d,vb_triangulated)){

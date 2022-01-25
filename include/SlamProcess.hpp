@@ -5,6 +5,7 @@
 #include "../include/ORBFeature.hpp"
 #include "../include/Matcher.hpp"
 #include "../include/Track.hpp"
+#include "../include/Param.hpp"
 using namespace std;
 using namespace cv;
 namespace ORBSLAM
@@ -16,6 +17,7 @@ namespace ORBSLAM
         ORBFeature *mp_orbfeature;
         Matcher *mp_matcher;
         Track *mp_tracker;
+        Param *mp_param;
 
 
         bool mb_mono_initialized;

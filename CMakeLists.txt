@@ -12,6 +12,7 @@ src/Track.cpp
 src/MultipleViewGeometry.cpp
 src/SlamProcess.cpp
 src/Matcher.cpp
+src/Param.cpp
 include/ORBFeature.hpp
 include/Frame.hpp
 include/DataIO.hpp
@@ -19,6 +20,7 @@ include/Track.hpp
 include/MultipleViewGeometry.hpp
 include/SlamProcess.hpp
 include/Matcher.hpp
+include/Param.hpp
 include/Typedef.hpp
 )
 target_link_libraries(ORBSLAM

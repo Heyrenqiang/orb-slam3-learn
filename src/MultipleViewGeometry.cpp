@@ -4,37 +4,37 @@ namespace ORBSLAM
 {
     MultipleViewGeometry::MultipleViewGeometry(/* args */)
     {
-        mf_sigma = 1.0;
     }
 
     MultipleViewGeometry::~MultipleViewGeometry()
     {
     }
 
-    void MultipleViewGeometry::Find_fundamental(vector<KeyPoint> &v_kps1, vector<KeyPoint> &v_kps2, vector<Match> &matches12, int &itration_num, vector<vector<int>> &candidates, Mat &F21,vector<bool> &vb_match_inline, int &ninliners)
+    void MultipleViewGeometry::Set_param(Param *param)
     {
-        vector<Point2f> v_p2f1, v_p2f2;
-        v_p2f1.resize(matches12.size());
-        v_p2f2.resize(matches12.size());
+        mp_param = param;
+        mm_camera_intrinsics = param->mm_camera_intrinsics.clone();
+        mf_sigma = 1.0;
+        mf_reproj_th = 2;
+    }
+
+    void MultipleViewGeometry::Find_fundamental(vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<Match> &matches12, int &itration_num, vector<vector<int>> &candidates, Mat &F21, vector<bool> &vb_match_inline, int &ninliners)
+    {
+
         vector<Point2f> v_np2f1;
         vector<Point2f> v_np2f2;
         v_np2f1.resize(matches12.size());
         v_np2f2.resize(matches12.size());
-        for (int i = 0; i < matches12.size(); i++)
-        {
-            v_p2f1[i] = v_kps1[matches12[i].first].pt;
-            v_p2f2[i] = v_kps2[matches12[i].second].pt;
-        }
         Mat T1, T2, T2t;
-        Normalize(v_p2f1, v_np2f1, T1);
-        Normalize(v_p2f2, v_np2f2, T2);
+        Normalize(vp2f_1, v_np2f1, T1);
+        Normalize(vp2f_2, v_np2f2, T2);
         T2t = T2.t();
 
         vector<Point2f> vp1_forF(8);
         vector<Point2f> vp2_forF(8);
         Mat tmp_F21;
 
-        vb_match_inline = vector<bool>(matches12.size(),false);
+        vb_match_inline = vector<bool>(matches12.size(), false);
         vector<bool> vb_cur_match_inline;
         float score = 0.0;
         float cur_score;
@@ -50,7 +50,7 @@ namespace ORBSLAM
             }
             Mat F = ComputeF(vp1_forF, vp2_forF);
             tmp_F21 = T2t * F * T1;
-            cur_score = Check_fundamental(tmp_F21,v_p2f1,v_p2f2,vb_cur_match_inline,ncurinline,mf_sigma);
+            cur_score = Check_fundamental(tmp_F21, vp2f_1, vp2f_2, vb_cur_match_inline, ncurinline, mf_sigma);
             if (cur_score > score)
             {
                 F21 = tmp_F21.clone();
@@ -59,7 +59,7 @@ namespace ORBSLAM
                 score = cur_score;
             }
         }
-        cout<<"num inline:"<<ninliners<<endl;
+        cout << "num inline:" << ninliners << endl;
     }
 
     void MultipleViewGeometry::Normalize(vector<Point2f> &v_p2f, vector<Point2f> &v_np2f, Mat &T)
@@ -129,7 +129,7 @@ namespace ORBSLAM
         return u * Mat::diag(w) * vt;
     }
 
-    float MultipleViewGeometry::Check_fundamental(Mat &F21, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> vb_ifinliner, int &num_inline, float sigma)
+    float MultipleViewGeometry::Check_fundamental(Mat &F21, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> &vb_ifinliner, int &num_inline, float sigma)
     {
         const int n = vp2f_1.size();
         const float f11 = F21.at<float>(0, 0);
@@ -193,5 +193,241 @@ namespace ORBSLAM
             }
         }
         return score;
+    }
+
+    bool MultipleViewGeometry::ReconstructF(int ninline, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> &vb_ifinline, Mat &F21, Mat &R21, Mat &t21, vector<Point3f> &vp3d, vector<bool> &vb_triangulated, float min_parallax, int min_triangulated)
+    {
+        Mat E21 = mm_camera_intrinsics.t() * F21 * mm_camera_intrinsics;
+        // cout << "E21:" << E21 << endl;
+        Mat R1, R2, t;
+        DecomposeE(E21, R1, R2, t);
+        cout << "R1:" << R1 << endl;
+        cout << "R2:" << R2 << endl;
+        cout << "t:" << t << endl;
+        vector<Point3f> vp3f_1, vp3f_2, vp3f_3, vp3f_4;
+        vector<bool> vb_triangulated1, vb_triangulated2, vb_triangulated3, vb_triangulated4;
+        float parallax1, parallax2, parallax3, parallax4;
+        int ngood1, ngood2, ngood3, ngood4;
+        Mat t1, t2;
+        t1 = t;
+        t2 = -t;
+        if (determinant(R1) < 0)
+        {
+            R1 = -R1;
+        }
+        if (determinant(R2) < 0)
+        {
+            R2 = -R2;
+        }
+        ngood1 = CheckRT(R1, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_1, vb_triangulated1, parallax1);
+        ngood2 = CheckRT(R2, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
+        ngood3 = CheckRT(R1, t2, vp2f_1, vp2f_2, vb_ifinline, vp3f_3, vb_triangulated3, parallax3);
+        ngood4 = CheckRT(R2, t2, vp2f_1, vp2f_2, vb_ifinline, vp3f_4, vb_triangulated4, parallax4);
+        // if (determinant(R1) > 0)
+        // {
+        //     t1 = t;
+        //     ngood1 = CheckRT(R1, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_1, vb_triangulated1, parallax1);
+        // }
+        // else
+        // {
+        //     R1 = -R1;
+        //     t1 = t;
+        //     ngood1 = CheckRT(R1, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_1, vb_triangulated1, parallax1);
+        // }
+        // if (determinant(R2) > 0)
+        // {
+        //     t2 = -t;
+        //     ngood2 = CheckRT(R2, t2, vp2f_2, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
+        // }
+        // else
+        // {
+        //     R2 = -R2;
+        //     t2 = -t;
+        //     ngood2 = CheckRT(R2, t2, vp2f_2, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
+        // }
+        int max_good = max(ngood1, max(ngood2, max(ngood3, ngood4)));
+
+        int min_good = max(static_cast<int>(0.9 * ninline), min_triangulated);
+        int nsimilar = 0;
+        if (ngood1 > 0.7 * max_good)
+        {
+            nsimilar++;
+        }
+        if (ngood2 > 0.7 * max_good)
+        {
+            nsimilar++;
+        }
+        if(ngood3>0.7*max_good){
+            nsimilar++;
+        }
+        if(ngood4>0.7*max_good){
+            nsimilar++;
+        }
+        if (max_good < min_good || nsimilar > 1)
+        {
+            return false;
+        }
+
+        if (max_good == ngood1)
+        {
+            if (parallax1 > min_parallax)
+            {
+                vp3d = vp3f_1;
+                vb_triangulated = vb_triangulated2;
+                R1.copyTo(R21);
+                t1.copyTo(t21);
+                return true;
+            }
+        }
+        else if (max_good == ngood2)
+        {
+            if (parallax2 > min_parallax)
+            {
+                vp3d = vp3f_2;
+                vb_triangulated = vb_triangulated2;
+                R2.copyTo(R21);
+                t1.copyTo(t21);
+                return true;
+            }
+        }else if(max_good==ngood3){
+            if(parallax3>min_parallax){
+                vp3d = vp3f_3;
+                vb_triangulated = vb_triangulated3;
+                R1.copyTo(R21);
+                t2.copyTo(t21);
+                return true;
+            }
+        }else if(max_good==ngood4){
+            if(parallax4>min_parallax){
+                vp3d = vp3f_4;
+                vb_triangulated = vb_triangulated4;
+                R2.copyTo(R21);
+                t2.copyTo(t21);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void MultipleViewGeometry::DecomposeE(Mat &E21, Mat &R1, Mat &R2, Mat &t)
+    {
+        Mat u, w, vt;
+        SVD::compute(E21, w, u, vt);
+        u.col(2).copyTo(t);
+        t = -t / norm(t);
+
+        Mat W(3, 3, CV_32F, Scalar(0));
+        W.at<float>(0, 1) = -1;
+        W.at<float>(1, 0) = 1;
+        W.at<float>(2, 2) = 1;
+
+        R1 = u * W * vt;
+        R2 = u * W.t() * vt;
+    }
+
+    int MultipleViewGeometry::CheckRT(Mat &R, Mat &t, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> &vb_ifinline, vector<Point3f> &vp3f, vector<bool> &vb_good, float &parallax)
+    {
+        const float fx = mm_camera_intrinsics.at<float>(0, 0);
+        const float fy = mm_camera_intrinsics.at<float>(1, 1);
+        const float cx = mm_camera_intrinsics.at<float>(0, 2);
+        const float cy = mm_camera_intrinsics.at<float>(1, 2);
+
+        vb_good = vector<bool>(vb_ifinline.size(), false);
+        vp3f.resize(vb_ifinline.size());
+        vector<float> v_cosparallax;
+        v_cosparallax.reserve(vb_ifinline.size());
+
+        Mat P1(3, 4, CV_32F, Scalar(0));
+        mm_camera_intrinsics.copyTo(P1.rowRange(0, 3).colRange(0, 3));
+        Mat O1 = Mat::zeros(3, 1, CV_32F);
+
+        Mat P2(3, 4, CV_32F);
+        R.copyTo(P2.rowRange(0, 3).colRange(0, 3));
+        t.copyTo(P2.rowRange(0, 3).col(3));
+        P2 = mm_camera_intrinsics * P2;
+
+        Mat O2 = -R.t() * t;
+
+        int ngood = 0;
+
+        for (int i = 0; i < vb_ifinline.size(); i++)
+        {
+            if (!vb_ifinline[i])
+            {
+                continue;
+            }
+            Mat p3d;
+            Triangulate(vp2f_1[i], vp2f_2[i], P1, P2, p3d);
+            if (!isfinite(p3d.at<float>(0)) || !isfinite(p3d.at<float>(1)) || !isfinite(p3d.at<float>(2)))
+            {
+                vb_good[i] = false;
+                continue;
+            }
+            Mat normal1 = p3d - O1;
+            float dist1 = norm(normal1);
+            Mat normal2 = p3d - O2;
+            float dist2 = norm(normal2);
+
+            float cos_parallax = normal1.dot(normal2) / (dist1 * dist2);
+            if (p3d.at<float>(2) <= 0 && cos_parallax < 0.99998)
+            {
+                continue;
+            }
+            Mat p3d_in2 = R * p3d + t;
+            if (p3d_in2.at<float>(2) <= 0 && cos_parallax < 0.99998)
+            {
+                continue;
+            }
+            float im1x, im1y;
+            float inv_z1 = 1.0 / p3d.at<float>(2);
+            im1x = fx * p3d.at<float>(0) * inv_z1 + cx;
+            im1y = fy * p3d.at<float>(1) * inv_z1 + cy;
+            float square_error1 = (im1x - vp2f_1[i].x) * (im1x - vp2f_1[i].x) + (im1y - vp2f_1[i].y) * (im1y - vp2f_1[i].y);
+            if (square_error1 > mf_reproj_th * mf_reproj_th)
+            {
+                continue;
+            }
+            float im2x, im2y;
+            float inv_z2 = 1.0 / p3d_in2.at<float>(2);
+            im2x = fx * p3d_in2.at<float>(0) * inv_z2 + cx;
+            im2y = fy * p3d_in2.at<float>(1) * inv_z2 + cy;
+            float square_error2 = (im2x - vp2f_2[i].x) * (im2x - vp2f_2[i].x) + (im2y - vp2f_2[i].y) * (im2y - vp2f_2[i].y);
+            if (square_error2 > mf_reproj_th * mf_reproj_th)
+            {
+                continue;
+            }
+            v_cosparallax.push_back(cos_parallax);
+            vp3f[i] = Point3f(p3d.at<float>(0), p3d.at<float>(1), p3d.at<float>(2));
+            ngood++;
+            if (cos_parallax < 0.99998)
+            {
+                vb_good[i] = true;
+            }
+        }
+        if (ngood > 0)
+        {
+            sort(v_cosparallax.begin(), v_cosparallax.end());
+            int idx = min(50, int(v_cosparallax.size() - 1));
+            parallax = acos(v_cosparallax[idx]) * 180 / CV_PI;
+        }
+        else
+        {
+            parallax = 0;
+        }
+        return ngood;
+    }
+
+    void MultipleViewGeometry::Triangulate(const Point2f &p2f1, const Point2f &p2f2, const Mat &P1, const Mat &P2, Mat &p3d)
+    {
+        Mat A(4, 4, CV_32F);
+        A.row(0) = p2f1.x * P1.row(2) - P1.row(0);
+        A.row(1) = p2f1.y * P1.row(2) - P1.row(1);
+        A.row(2) = p2f2.x * P2.row(2) - P2.row(0);
+        A.row(3) = p2f2.y * P2.row(2) - P2.row(1);
+
+        Mat u, w, vt;
+        SVD::compute(A, w, u, vt, SVD::MODIFY_A | SVD::FULL_UV);
+        p3d = vt.row(3).t();
+        p3d = p3d.rowRange(0, 3) / p3d.at<float>(3);
     }
 }

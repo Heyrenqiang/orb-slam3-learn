@@ -4,17 +4,23 @@ namespace ORBSLAM
 
     Track::Track()
     {
-        mp_multipleviewgeometry = new MultipleViewGeometry();
-        mi_itration_num = 200;
     }
     Track::~Track()
     {
+    }
+
+    void Track::Set_param(Param *param)
+    {
+        mp_param = param;
+        mp_multipleviewgeometry = new MultipleViewGeometry();
+        mp_multipleviewgeometry->Set_param(mp_param);
+        mi_itration_num = 200;
     }
     void Track::Track_frame()
     {
     }
 
-    bool Track::Mono_initial_two_frame(vector<KeyPoint> &v_kps1, vector<KeyPoint> &v_kps2, vector<int> &v_matches12, Mat &R21, Mat &t21, vector<Point3f> &v_p3f, vector<bool> &v_triangulated)
+    bool Track::Mono_initial_two_frame(vector<KeyPoint> &v_kps1, vector<KeyPoint> &v_kps2, vector<int> &v_matches12, Mat &R21, Mat &t21, vector<Point3f> &vp3f, vector<bool> &vb_triangulated)
     {
         vector<Match> matches12;
         matches12.reserve(v_kps2.size());
@@ -55,11 +61,25 @@ namespace ORBSLAM
                 avaliable_indices.pop_back();
             }
         }
+
+        vector<Point2f> vp2f_1, vp2f_2;
+        vp2f_1.resize(matches12.size());
+        vp2f_2.resize(matches12.size());
+        for (int i = 0; i < matches12.size(); i++)
+        {
+            vp2f_1[i] = v_kps1[matches12[i].first].pt;
+            vp2f_2[i] = v_kps2[matches12[i].second].pt;
+        }
+
         vector<bool> vb_inlineesH, vb_inlineesF;
         int ninlinersH, ninlinersF;
         Mat H21, F21;
-        mp_multipleviewgeometry->Find_fundamental(v_kps1, v_kps2, matches12, mi_itration_num, candidates, F21, vb_inlineesF, ninlinersF);
-        cout<<"ninlinersF"<<ninlinersF<<endl;
+        mp_multipleviewgeometry->Find_fundamental(vp2f_1, vp2f_2, matches12, mi_itration_num, candidates, F21, vb_inlineesF, ninlinersF);
+        cout << "ninlinersF:" << ninlinersF << endl;
+        // cout << "F21:" << F21 << endl;
+        mp_multipleviewgeometry->ReconstructF(ninlinersF,vp2f_1, vp2f_2, vb_inlineesF, F21, R21, t21, vp3f, vb_triangulated, 1.0, 50);
+        cout<<"R21:"<<R21<<endl;
+        cout<<"t21"<<t21<<endl;
         return true;
     }
 }
