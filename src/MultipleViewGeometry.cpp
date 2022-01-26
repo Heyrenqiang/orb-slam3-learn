@@ -325,14 +325,14 @@ namespace ORBSLAM
         R2 = u * W.t() * vt;
     }
 
-    int MultipleViewGeometry::CheckRT(Mat &R, Mat &t, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> &vb_ifinline, vector<Point3f> &vp3f, vector<bool> &vb_good, float &parallax)
+    int MultipleViewGeometry::CheckRT(Mat &R, Mat &t, vector<Point2f> &vp2f_1, vector<Point2f> &vp2f_2, vector<bool> &vb_ifinline, vector<Point3f> &vp3f, vector<bool> &vb_triangulated, float &parallax)
     {
         const float fx = mm_camera_intrinsics.at<float>(0, 0);
         const float fy = mm_camera_intrinsics.at<float>(1, 1);
         const float cx = mm_camera_intrinsics.at<float>(0, 2);
         const float cy = mm_camera_intrinsics.at<float>(1, 2);
 
-        vb_good = vector<bool>(vb_ifinline.size(), false);
+        vb_triangulated = vector<bool>(vb_ifinline.size(), false);
         vp3f.resize(vb_ifinline.size());
         vector<float> v_cosparallax;
         v_cosparallax.reserve(vb_ifinline.size());
@@ -360,7 +360,7 @@ namespace ORBSLAM
             Triangulate(vp2f_1[i], vp2f_2[i], P1, P2, p3d);
             if (!isfinite(p3d.at<float>(0)) || !isfinite(p3d.at<float>(1)) || !isfinite(p3d.at<float>(2)))
             {
-                vb_good[i] = false;
+                vb_triangulated[i] = false;
                 continue;
             }
             Mat normal1 = p3d - O1;
@@ -401,7 +401,7 @@ namespace ORBSLAM
             ngood++;
             if (cos_parallax < 0.99998)
             {
-                vb_good[i] = true;
+                vb_triangulated[i] = true;
             }
         }
         if (ngood > 0)

@@ -77,9 +77,24 @@ namespace ORBSLAM
         mp_multipleviewgeometry->Find_fundamental(vp2f_1, vp2f_2, matches12, mi_itration_num, candidates, F21, vb_inlineesF, ninlinersF);
         cout << "ninlinersF:" << ninlinersF << endl;
         // cout << "F21:" << F21 << endl;
-        mp_multipleviewgeometry->ReconstructF(ninlinersF,vp2f_1, vp2f_2, vb_inlineesF, F21, R21, t21, vp3f, vb_triangulated, 1.0, 50);
-        cout<<"R21:"<<R21<<endl;
-        cout<<"t21"<<t21<<endl;
-        return true;
+        vector<bool> vb_triangulated_inline;
+        vector<Point3f> vp3f_inline;
+        bool b_getRT = mp_multipleviewgeometry->ReconstructF(ninlinersF, vp2f_1, vp2f_2, vb_inlineesF, F21, R21, t21, vp3f_inline, vb_triangulated_inline, 1.0, 50);
+        if (b_getRT)
+        {
+            cout << "R21:" << R21 << endl;
+            cout << "t21" << t21 << endl;
+            vp3f.resize(v_kps1.size());
+            vb_triangulated = vector<bool>(v_kps1.size(), false);
+            for (int i = 0; i < matches12.size(); i++)
+            {
+                if (vb_triangulated_inline[i])
+                {
+                    vp3f[matches12[i].first] = vp3f_inline[i];
+                    vb_triangulated[matches12[i].first] = true;
+                }
+            }
+        }
+        return b_getRT;
     }
 }
