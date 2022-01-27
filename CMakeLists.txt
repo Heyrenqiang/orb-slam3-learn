@@ -13,6 +13,10 @@ src/MultipleViewGeometry.cpp
 src/SlamProcess.cpp
 src/Matcher.cpp
 src/Param.cpp
+src/KeyFrame.cpp
+src/Map.cpp
+src/MapPoint.cpp
+src/MapAtlas.cpp
 include/ORBFeature.hpp
 include/Frame.hpp
 include/DataIO.hpp
@@ -21,6 +25,10 @@ include/MultipleViewGeometry.hpp
 include/SlamProcess.hpp
 include/Matcher.hpp
 include/Param.hpp
+include/KeyFrame.hpp
+include/Map.hpp
+include/MapPoint.hpp
+include/MapAtlas.hpp
 include/Typedef.hpp
 )
 target_link_libraries(ORBSLAM

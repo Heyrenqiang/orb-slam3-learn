@@ -223,28 +223,7 @@ namespace ORBSLAM
         ngood2 = CheckRT(R2, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
         ngood3 = CheckRT(R1, t2, vp2f_1, vp2f_2, vb_ifinline, vp3f_3, vb_triangulated3, parallax3);
         ngood4 = CheckRT(R2, t2, vp2f_1, vp2f_2, vb_ifinline, vp3f_4, vb_triangulated4, parallax4);
-        // if (determinant(R1) > 0)
-        // {
-        //     t1 = t;
-        //     ngood1 = CheckRT(R1, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_1, vb_triangulated1, parallax1);
-        // }
-        // else
-        // {
-        //     R1 = -R1;
-        //     t1 = t;
-        //     ngood1 = CheckRT(R1, t1, vp2f_1, vp2f_2, vb_ifinline, vp3f_1, vb_triangulated1, parallax1);
-        // }
-        // if (determinant(R2) > 0)
-        // {
-        //     t2 = -t;
-        //     ngood2 = CheckRT(R2, t2, vp2f_2, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
-        // }
-        // else
-        // {
-        //     R2 = -R2;
-        //     t2 = -t;
-        //     ngood2 = CheckRT(R2, t2, vp2f_2, vp2f_2, vb_ifinline, vp3f_2, vb_triangulated2, parallax2);
-        // }
+
         int max_good = max(ngood1, max(ngood2, max(ngood3, ngood4)));
 
         int min_good = max(static_cast<int>(0.9 * ninline), min_triangulated);
@@ -257,10 +236,12 @@ namespace ORBSLAM
         {
             nsimilar++;
         }
-        if(ngood3>0.7*max_good){
+        if (ngood3 > 0.7 * max_good)
+        {
             nsimilar++;
         }
-        if(ngood4>0.7*max_good){
+        if (ngood4 > 0.7 * max_good)
+        {
             nsimilar++;
         }
         if (max_good < min_good || nsimilar > 1)
@@ -278,6 +259,10 @@ namespace ORBSLAM
                 t1.copyTo(t21);
                 return true;
             }
+            else
+            {
+                cout << "small parallax!" << endl;
+            }
         }
         else if (max_good == ngood2)
         {
@@ -289,21 +274,39 @@ namespace ORBSLAM
                 t1.copyTo(t21);
                 return true;
             }
-        }else if(max_good==ngood3){
-            if(parallax3>min_parallax){
+            else
+            {
+                cout << "small parallax!" << endl;
+            }
+        }
+        else if (max_good == ngood3)
+        {
+            if (parallax3 > min_parallax)
+            {
                 vp3d = vp3f_3;
                 vb_triangulated = vb_triangulated3;
                 R1.copyTo(R21);
                 t2.copyTo(t21);
                 return true;
             }
-        }else if(max_good==ngood4){
-            if(parallax4>min_parallax){
+            else
+            {
+                cout << "small parallax!" << endl;
+            }
+        }
+        else if (max_good == ngood4)
+        {
+            if (parallax4 > min_parallax)
+            {
                 vp3d = vp3f_4;
                 vb_triangulated = vb_triangulated4;
                 R2.copyTo(R21);
                 t2.copyTo(t21);
                 return true;
+            }
+            else
+            {
+                cout << "small parallax!" << endl;
             }
         }
         return false;

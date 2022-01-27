@@ -110,4 +110,12 @@ namespace ORBSLAM
         return candidate_index;
     }
 
+    void Frame::Set_pose(Mat Tcw){
+        mm_Tcw = Tcw.clone();
+        mm_Rcw = mm_Tcw.rowRange(0,3).colRange(0,3);
+        mm_tcw = mm_Tcw.rowRange(0,3).col(3);
+        mm_Rwc = mm_Rcw.t();
+        mm_twc = -mm_Rwc*mm_tcw;
+    }
+
 }

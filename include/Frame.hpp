@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
+#include "../include/MapPoint.hpp"
 using namespace std;
 using namespace cv;
 
@@ -15,7 +16,7 @@ namespace ORBSLAM
 #define FRAME_GRID_COLS 64
 
     class ORBFeature;
-
+    class MapPoint;
     class Frame
     {
     public:
@@ -27,14 +28,17 @@ namespace ORBSLAM
         // Constructor for Monocular cameras.
         Frame(const Mat &im, ORBFeature *orbfeature, int feature_num_to_extract);
         void assign_features_to_grid();
-        bool Pos_in_grid(const KeyPoint &kp,int &row,int &col);
-        vector<int> Get_candidate_points_to_match(Point2f &vp_prematched,int window_size,int min_level,int max_level);
+        bool Pos_in_grid(const KeyPoint &kp, int &row, int &col);
+        vector<int> Get_candidate_points_to_match(Point2f &vp_prematched, int window_size, int min_level, int max_level);
+        void Set_pose(Mat Tcw);
 
         Mat m_image;
         int mi_feature_num;
         vector<KeyPoint> mv_orb_keypoints;
         Mat mm_descriptors;
         vector<KeyPoint> mv_orb_unkeypoints;
+        vector<MapPoint *> mvp_mappoints;
+        vector<bool> mvb_outline;
 
         vector<int> mv_grid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
@@ -47,6 +51,13 @@ namespace ORBSLAM
         static float mf_grid_element_height_inv;
 
         static bool mb_initial_image_bound;
+
+        Mat mm_Tcw;
+        Mat mm_Rcw;
+        Mat mm_tcw;
+        Mat mm_Twc;
+        Mat mm_Rwc;
+        Mat mm_twc;
     };
 
 }

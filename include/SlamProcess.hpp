@@ -6,6 +6,10 @@
 #include "../include/Matcher.hpp"
 #include "../include/Track.hpp"
 #include "../include/Param.hpp"
+#include "../include/KeyFrame.hpp"
+#include "../include/Map.hpp"
+#include "../include/MapAtlas.hpp"
+#include "../include/MapPoint.hpp"
 using namespace std;
 using namespace cv;
 namespace ORBSLAM
@@ -18,6 +22,8 @@ namespace ORBSLAM
         Matcher *mp_matcher;
         Track *mp_tracker;
         Param *mp_param;
+        Map * mp_map;
+        MapAtlas * mp_mapatlas;
 
 
         bool mb_mono_initialized;
@@ -29,12 +35,14 @@ namespace ORBSLAM
         vector<int> mvi_initial_matches;
         vector<Point3f> mvp3f_initial3d;
 
+
         // Mat im1, im2;
 
     public:
         SlamProcess(/* args */);
 
         void Process(const Mat &im);
+        void Create_momo_initial_map();
     };
 
 
