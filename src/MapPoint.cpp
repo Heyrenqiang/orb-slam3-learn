@@ -33,4 +33,9 @@ namespace ORBSLAM
     {
         
     }
+    
+    bool MapPoint::Is_bad() 
+    {
+        return false;
+    }
 }

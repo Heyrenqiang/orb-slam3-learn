@@ -21,6 +21,7 @@ namespace ORBSLAM
         void Add_observation(KeyFrame *p_KF, int idx);
         void Compute_distinctive_descriptors();
         void Update_normal_and_depth();
+        bool Is_bad();
     };
 
 }

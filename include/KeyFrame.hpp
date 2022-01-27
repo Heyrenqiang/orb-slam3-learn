@@ -3,6 +3,7 @@
 #include "../include/Typedef.hpp"
 #include "../include/Frame.hpp"
 #include "../include/MapPoint.hpp"
+using namespace std;
 namespace ORBSLAM{
     class MapPoint;
     class Frame;
@@ -16,8 +17,11 @@ namespace ORBSLAM{
         KeyFrame(Frame &F);
         void Compute_bow();
         void Add_mappoint(MapPoint *p_mappoint,int &idx);
+        void Update_connections();
+        set<MapPoint *> Get_mappoints();
 
-        // vector<MapPoint *> mvp_mappoints;
+
+        vector<MapPoint *> mvp_mappoints;
 
     };
     

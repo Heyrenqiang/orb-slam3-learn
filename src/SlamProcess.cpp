@@ -114,5 +114,12 @@ namespace ORBSLAM
             mF_curframe.mvb_outline[mvi_initial_matches[i]] = false;
             mp_mapatlas->Add_mappoint(p_mappoint);
         }
+
+        pkF_ini->Update_connections();
+        pkF_cur->Update_connections();
+        set<MapPoint*> sp_mappoints;
+        sp_mappoints = pkF_ini->Get_mappoints();
     }
+
+
 }

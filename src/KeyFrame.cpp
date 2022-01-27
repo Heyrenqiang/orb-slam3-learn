@@ -24,4 +24,23 @@ namespace ORBSLAM
         
     }
     
+    void KeyFrame::Update_connections() 
+    {
+        
+    }
+
+    set<MapPoint *> KeyFrame::Get_mappoints(){
+        set<MapPoint*> s;
+        for(int i=0;i<mvp_mappoints.size();i++){
+            if(!mvp_mappoints[i]){
+                continue;
+            }
+            MapPoint * p_mp = mvp_mappoints[i];
+            if(!p_mp->Is_bad()){
+                s.insert(p_mp);
+            }
+        }
+        return s;
+    }
+    
 }
