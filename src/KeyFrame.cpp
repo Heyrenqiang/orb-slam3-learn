@@ -28,6 +28,31 @@ namespace ORBSLAM
     {
         
     }
+    
+    float KeyFrame::Compute_scene_median_depth(int q) 
+    {
+        
+    }
+    
+    int KeyFrame::Tracked_mappoints(const int &minobs) 
+    {
+        
+    }
+    
+    Mat KeyFrame::Get_pose() 
+    {
+        
+    }
+    
+    Mat KeyFrame::Get_poseinv() 
+    {
+        
+    }
+    
+    void KeyFrame::Set_pose(Mat &tcw) 
+    {
+        
+    }
 
     set<MapPoint *> KeyFrame::Get_mappoints(){
         set<MapPoint*> s;
@@ -41,6 +66,10 @@ namespace ORBSLAM
             }
         }
         return s;
+    }
+
+    vector<MapPoint*> KeyFrame::Get_vect_mappoints(){
+
     }
     
 }

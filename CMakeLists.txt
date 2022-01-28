@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 project(test)
 find_package(OpenCV 4.0)
 MESSAGE(${OpenCV_VERSION})
+find_package(Eigen3 REQUIRED)
+
+include_directories(
+    ${EIGEN3_INCLUDE_DIR}
+)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 add_library(ORBSLAM SHARED
@@ -17,6 +22,8 @@ src/KeyFrame.cpp
 src/Map.cpp
 src/MapPoint.cpp
 src/MapAtlas.cpp
+src/Optimizer.cpp
+src/LocalMap.cpp
 include/ORBFeature.hpp
 include/Frame.hpp
 include/DataIO.hpp
@@ -29,14 +36,17 @@ include/KeyFrame.hpp
 include/Map.hpp
 include/MapPoint.hpp
 include/MapAtlas.hpp
+include/Optimizer.hpp
+include/LocalMap.hpp
 include/Typedef.hpp
 )
 target_link_libraries(ORBSLAM
 ${OpenCV_LIBS}
+${EIGEN3_LIBS}
 )
 
-add_executable(test_opencv src/test.cpp)
-target_link_libraries(test_opencv 
+add_executable(test src/test.cpp)
+target_link_libraries(test
 ${OpenCV_LIBS}
 ORBSLAM
 )

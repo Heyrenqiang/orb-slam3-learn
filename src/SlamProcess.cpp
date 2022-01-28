@@ -117,8 +117,43 @@ namespace ORBSLAM
 
         pkF_ini->Update_connections();
         pkF_cur->Update_connections();
-        set<MapPoint*> sp_mappoints;
-        sp_mappoints = pkF_ini->Get_mappoints();
+        // set<MapPoint*> sp_mappoints;
+        // sp_mappoints = pkF_ini->Get_mappoints();
+        Optimizer::Global_bundle_adjustment(mp_mapatlas->Get_current_map(),20);
+        float median_depth = pkF_ini->Compute_scene_median_depth(2);
+        float inv_median_depth;
+        inv_median_depth = 4.0f/median_depth;
+        if(median_depth<0||pkF_cur->Tracked_mappoints(1)<50){
+            Reset_active_map();
+            return;
+        }
+        Mat Tcw = pkF_cur->Get_pose();
+        Tcw.rowRange(0,3).col(3) = Tcw.col(3).rowRange(0,3)*inv_median_depth;
+        pkF_cur->Set_pose(Tcw);
+
+        vector<MapPoint*> vp_all_mappoints = pkF_ini->Get_vect_mappoints();
+        for(int i=0;i<vp_all_mappoints.size();i++){
+            if(vp_all_mappoints[i]){
+                MapPoint * p_mp = vp_all_mappoints[i];
+                p_mp->Set_world_pose(p_mp->Get_world_pose()*inv_median_depth);
+                p_mp->Update_normal_and_depth();
+            }
+        }
+        pkF_cur->mpKF_pre = pkF_ini;
+        pkF_ini->mpKF_next = pkF_cur;
+
+        mp_localmap->Insert_keyframe(pkF_ini);
+        mp_localmap->Insert_keyframe(pkF_cur);
+        mvp_keyframe.push_back(pkF_cur);
+        mvp_keyframe.push_back(pkF_ini);
+        me_state = OK;
+
+
+    }
+    
+    void SlamProcess::Reset_active_map() 
+    {
+        
     }
 
 

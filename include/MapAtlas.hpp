@@ -17,6 +17,7 @@ namespace ORBSLAM
         void Add_key_frame(KeyFrame *KF);
         Map *Get_current_map();
         void Add_mappoint(MapPoint * p_mappoint);
+        vector<KeyFrame*> Get_all_keyframes();
 
         Map *mp_current_map;
     };

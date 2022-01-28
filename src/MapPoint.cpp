@@ -38,4 +38,14 @@ namespace ORBSLAM
     {
         return false;
     }
+    
+    void MapPoint::Set_world_pose(const Mat &pos) 
+    {
+        
+    }
+    
+    Mat MapPoint::Get_world_pose() 
+    {
+        
+    }
 }

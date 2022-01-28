@@ -22,6 +22,8 @@ namespace ORBSLAM
         void Compute_distinctive_descriptors();
         void Update_normal_and_depth();
         bool Is_bad();
+        void Set_world_pose(const Mat &pos);
+        Mat Get_world_pose();
     };
 
 }

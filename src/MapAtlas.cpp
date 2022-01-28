@@ -22,4 +22,8 @@ namespace ORBSLAM
     void MapAtlas::Add_key_frame(KeyFrame *KF)
     {
     }
+
+    vector<KeyFrame*> MapAtlas::Get_all_keyframes(){
+
+    }
 }
