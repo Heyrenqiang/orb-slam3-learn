@@ -11,12 +11,14 @@ namespace ORBSLAM
     float Frame::mf_box_miny;
     float Frame::mf_box_maxx;
     float Frame::mf_box_maxy;
-    Frame::Frame(){}
+    Frame::Frame() {}
+    KeyFrame::KeyFrame() {}
     Frame::Frame(const Mat &im, ORBFeature *orbfeature, int feature_num_to_extract)
     {
         m_image = im.clone();
         orbfeature->extract_orb_compute_descriptor(im, feature_num_to_extract, mv_orb_keypoints, mm_descriptors);
         mi_feature_num = mv_orb_keypoints.size();
+        cout << "feature num:" << mi_feature_num << endl;
         orbfeature->undistort_keypoints(mv_orb_keypoints, mv_orb_unkeypoints, mi_feature_num);
         if (mb_initial_image_bound)
         {
@@ -33,7 +35,7 @@ namespace ORBSLAM
         int cols = FRAME_GRID_COLS;
         int rows = FRAME_GRID_ROWS;
         const int ncells = rows * cols;
-        int nreserve = 0.5f * mi_feature_num/ncells;
+        int nreserve = 0.5f * mi_feature_num / ncells;
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
@@ -64,44 +66,55 @@ namespace ORBSLAM
         return true;
     }
 
-    vector<int> Frame::Get_candidate_points_to_match(Point2f &vp_prematched,int window_size,int min_level,int max_level){
+    vector<int> Frame::Get_candidate_points_to_match(Point2f &vp_prematched, int window_size, int min_level, int max_level)
+    {
         float x = vp_prematched.x;
         float y = vp_prematched.y;
         vector<int> candidate_index;
         candidate_index.reserve(mi_feature_num);
         float factor_x = (float)window_size;
         float factor_y = (float)window_size;
-        const int min_xindex = max(0,(int)floor((x-mf_box_minx-factor_x)*mf_grid_element_width_inv));
-        if(min_xindex>=FRAME_GRID_COLS){
-            return candidate_index; 
-        }
-        const int max_xindex = min((int)FRAME_GRID_COLS-1,(int)floor((x-mf_box_minx+factor_x)*mf_grid_element_width_inv));
-        if(max_xindex<0){
+        const int min_xindex = max(0, (int)floor((x - mf_box_minx - factor_x) * mf_grid_element_width_inv));
+        if (min_xindex >= FRAME_GRID_COLS)
+        {
             return candidate_index;
         }
-        const int min_yindex = max(0,(int)floor((y-mf_box_miny-factor_y)*mf_grid_element_height_inv));
-        if(min_yindex>=FRAME_GRID_ROWS){
+        const int max_xindex = min((int)FRAME_GRID_COLS - 1, (int)floor((x - mf_box_minx + factor_x) * mf_grid_element_width_inv));
+        if (max_xindex < 0)
+        {
             return candidate_index;
         }
-        const int max_yindex = min((int)FRAME_GRID_ROWS-1,(int)floor((y-mf_box_miny+factor_y)*mf_grid_element_height_inv));
-        if(max_yindex<0){
+        const int min_yindex = max(0, (int)floor((y - mf_box_miny - factor_y) * mf_grid_element_height_inv));
+        if (min_yindex >= FRAME_GRID_ROWS)
+        {
             return candidate_index;
         }
-        for(int ix=min_xindex;ix<=max_xindex;ix++){
-            for(int iy=min_yindex;iy<=max_yindex;iy++){
+        const int max_yindex = min((int)FRAME_GRID_ROWS - 1, (int)floor((y - mf_box_miny + factor_y) * mf_grid_element_height_inv));
+        if (max_yindex < 0)
+        {
+            return candidate_index;
+        }
+        for (int ix = min_xindex; ix <= max_xindex; ix++)
+        {
+            for (int iy = min_yindex; iy <= max_yindex; iy++)
+            {
                 vector<int> kps_in_cell = mv_grid[ix][iy];
-                if(kps_in_cell.empty()){
+                if (kps_in_cell.empty())
+                {
                     continue;
                 }
-                for(int i=0;i<kps_in_cell.size();i++){
+                for (int i = 0; i < kps_in_cell.size(); i++)
+                {
                     KeyPoint kp = mv_orb_unkeypoints[kps_in_cell[i]];
-                    //TODO different from orign code
-                    if(kp.octave<min_level||kp.octave>max_level){
+                    // TODO different from orign code
+                    if (kp.octave < min_level || kp.octave > max_level)
+                    {
                         continue;
                     }
-                    const float distx = kp.pt.x-x;
-                    const float disty = kp.pt.y-y;
-                    if(fabs(distx)<factor_x&&fabs(disty)<factor_y){
+                    const float distx = kp.pt.x - x;
+                    const float disty = kp.pt.y - y;
+                    if (fabs(distx) < factor_x && fabs(disty) < factor_y)
+                    {
                         candidate_index.push_back(kps_in_cell[i]);
                     }
                 }
@@ -110,12 +123,58 @@ namespace ORBSLAM
         return candidate_index;
     }
 
-    void Frame::Set_pose(Mat Tcw){
+    void Frame::Set_pose(Mat Tcw)
+    {
         mm_Tcw = Tcw.clone();
-        mm_Rcw = mm_Tcw.rowRange(0,3).colRange(0,3);
-        mm_tcw = mm_Tcw.rowRange(0,3).col(3);
+        mm_Rcw = mm_Tcw.rowRange(0, 3).colRange(0, 3);
+        mm_tcw = mm_Tcw.rowRange(0, 3).col(3);
         mm_Rwc = mm_Rcw.t();
-        mm_twc = -mm_Rwc*mm_tcw;
+        mm_twc = -mm_Rwc * mm_tcw;
+    }
+
+    void KeyFrame::Compute_bow()
+    {
+    }
+    void KeyFrame::Add_mappoint(MapPoint *p_mappoint, int &idx)
+    {
+    }
+    void KeyFrame::Update_connections()
+    {
+    }
+    set<MapPoint *> KeyFrame::Get_mappoints()
+    {
+        set<MapPoint *> s;
+        for (int i = 0; i < mvp_mappoints.size(); i++)
+        {
+            if (!mvp_mappoints[i])
+            {
+                continue;
+            }
+            MapPoint *p_mp = mvp_mappoints[i];
+            if (!p_mp->Is_bad())
+            {
+                s.insert(p_mp);
+            }
+        }
+        return s;
+    }
+    float KeyFrame::Compute_scene_median_depth(int q)
+    {
+    }
+    int KeyFrame::Tracked_mappoints(const int &minobs)
+    {
+    }
+    Mat KeyFrame::Get_pose()
+    {
+    }
+    Mat KeyFrame::Get_poseinv()
+    {
+    }
+    void KeyFrame::Set_pose(Mat &tcw)
+    {
+    }
+    vector<MapPoint *> KeyFrame::Get_vect_mappoints()
+    {
     }
 
 }

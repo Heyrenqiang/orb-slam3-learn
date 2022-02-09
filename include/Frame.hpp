@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
+#include <DBoW3/DBoW3.h>
 #include "../include/MapPoint.hpp"
 using namespace std;
 using namespace cv;
@@ -58,6 +59,29 @@ namespace ORBSLAM
         Mat mm_Twc;
         Mat mm_Rwc;
         Mat mm_twc;
+    };
+
+    class KeyFrame : public Frame
+    {
+    public:
+        KeyFrame();
+
+        void Compute_bow();
+        void Add_mappoint(MapPoint *p_mappoint, int &idx);
+        void Update_connections();
+        set<MapPoint *> Get_mappoints();
+        float Compute_scene_median_depth(int q);
+        int Tracked_mappoints(const int &minobs);
+        Mat Get_pose();
+        Mat Get_poseinv();
+        void Set_pose(Mat &tcw);
+        vector<MapPoint *> Get_vect_mappoints();
+
+        vector<MapPoint *> mvp_mappoints;
+        KeyFrame *mpKF_pre;
+        KeyFrame *mpKF_next;
+        DBoW3::BowVector mv_bowvector;
+        DBoW3::FeatureVector mv_featurevector;
     };
 
 }

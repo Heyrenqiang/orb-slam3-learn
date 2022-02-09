@@ -59,7 +59,7 @@ namespace ORBSLAM
                 score = cur_score;
             }
         }
-        cout << "num inline:" << ninliners << endl;
+        // cout << "num inline:" << ninliners << endl;
     }
 
     void MultipleViewGeometry::Normalize(vector<Point2f> &v_p2f, vector<Point2f> &v_np2f, Mat &T)
@@ -261,7 +261,7 @@ namespace ORBSLAM
             }
             else
             {
-                cout << "small parallax!" << endl;
+                cout << "small parallax! " <<parallax1<<endl;
             }
         }
         else if (max_good == ngood2)
@@ -276,7 +276,7 @@ namespace ORBSLAM
             }
             else
             {
-                cout << "small parallax!" << endl;
+                cout << "small parallax! " <<parallax2<< endl;
             }
         }
         else if (max_good == ngood3)
@@ -291,7 +291,7 @@ namespace ORBSLAM
             }
             else
             {
-                cout << "small parallax!" << endl;
+                cout << "small parallax! " <<parallax3<< endl;
             }
         }
         else if (max_good == ngood4)
@@ -306,7 +306,7 @@ namespace ORBSLAM
             }
             else
             {
-                cout << "small parallax!" << endl;
+                cout << "small parallax! " <<parallax4<< endl;
             }
         }
         return false;

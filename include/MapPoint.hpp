@@ -1,7 +1,7 @@
 #ifndef __MAPPOINT_H__
 #define __MAPPOINT_H__
 #include "../include/Typedef.hpp"
-#include "../include/KeyFrame.hpp"
+#include "../include/Frame.hpp"
 #include "../include/Map.hpp"
 using namespace std;
 using namespace cv;

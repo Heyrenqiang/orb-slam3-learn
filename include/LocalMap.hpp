@@ -1,6 +1,6 @@
 #ifndef __LOCALMAP_H__
 #define __LOCALMAP_H__
-#include "../include/KeyFrame.hpp"
+#include "../include/Frame.hpp"
 namespace ORBSLAM{
     class LocalMap
     {

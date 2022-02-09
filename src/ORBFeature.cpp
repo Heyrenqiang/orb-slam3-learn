@@ -905,7 +905,7 @@ namespace ORBSLAM
         destroyWindow("image");
 #endif
 
-        cout << "fast feature size after grid extract:" << vToDistributeKeys.size() << endl;
+        // cout << "fast feature size after grid extract:" << vToDistributeKeys.size() << endl;
     }
 
     vector<KeyPoint> ORBFeature::Test_DistribiteOctTree(const Mat &im, const vector<KeyPoint> &vToDistributeKeys, Rect &rect,
@@ -1255,7 +1255,7 @@ namespace ORBSLAM
             circle(img, Point(pKP->pt.x, pKP->pt.y), 2, Scalar(0, 0, 250), 2);
 #endif
         }
-        cout << "result feature num:" << vResultKeys.size() << endl;
+        // cout << "result feature num:" << vResultKeys.size() << endl;
 #ifdef _DEBUG
         imshow("image", img);
         waitKey();

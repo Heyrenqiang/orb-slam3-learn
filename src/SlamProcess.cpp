@@ -1,4 +1,5 @@
 #include "../include/SlamProcess.hpp"
+#define _DEBUG
 namespace ORBSLAM
 {
     SlamProcess::SlamProcess(/* args */)
@@ -9,6 +10,8 @@ namespace ORBSLAM
         mp_tracker = new Track();
         mp_param = new Param();
         mp_tracker->Set_param(mp_param);
+        std::string filepath = "/home/heyrenqiang/data/Vocabulary/ORBvoc.txt.tar.gz";
+        mp_vocaburary = new DBoW3::Vocabulary(filepath);
 
         mb_mono_initialized = false;
         mb_initial_frame_ready = false;
@@ -60,7 +63,7 @@ namespace ORBSLAM
 
                 cv::imshow("good matches", img_goodmatch);
                 cv::waitKey(0);
-                cout << "nmatches:" << nmateches << endl;
+                // cout << "nmatches:" << nmateches << endl;
 #endif
                 Mat R21, t21;
                 vector<bool> vb_triangulated;
@@ -79,6 +82,7 @@ namespace ORBSLAM
                     R21.copyTo(Tcw.rowRange(0, 3).colRange(0, 3));
                     t21.copyTo(Tcw.rowRange(0, 3).col(3));
                     mF_curframe.Set_pose(Tcw);
+                    Create_momo_initial_map();
                     cout << "yes............" << endl;
                 }
             }
@@ -90,10 +94,12 @@ namespace ORBSLAM
 
     void SlamProcess::Create_momo_initial_map()
     {
-        KeyFrame *pkF_ini = new KeyFrame(mF_initial_frame);
-        KeyFrame *pkF_cur = new KeyFrame(mF_curframe);
-        pkF_ini->Compute_bow();
-        pkF_cur->Compute_bow();
+        KeyFrame *pkF_ini = new KeyFrame();
+        KeyFrame *pkF_cur = new KeyFrame();
+        swap(*((Frame*)pkF_ini),mF_initial_frame);
+        swap(*((Frame*)pkF_cur),mF_curframe);
+        Compute_bow(pkF_ini);
+        Compute_bow(pkF_cur);
         mp_mapatlas->Add_key_frame(pkF_ini);
         mp_mapatlas->Add_key_frame(pkF_cur);
         for (int i = 0; i < mvi_initial_matches.size(); i++)
@@ -154,6 +160,12 @@ namespace ORBSLAM
     void SlamProcess::Reset_active_map() 
     {
         
+    }
+    
+    void SlamProcess::Compute_bow(KeyFrame* pkf) 
+    {
+        vector<Mat> v_cur_desc = Converter::toDescriptorVector(pkf->mm_descriptors);
+        mp_vocaburary->transform(v_cur_desc,pkf->mv_bowvector,pkf->mv_featurevector,4);
     }
 
 

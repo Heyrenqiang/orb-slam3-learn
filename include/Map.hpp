@@ -1,6 +1,6 @@
 #ifndef __MAP_H__
 #define __MAP_H__
-#include "../include/KeyFrame.hpp"
+#include "../include/Frame.hpp"
 namespace ORBSLAM{
     class KeyFrame;
     class Map

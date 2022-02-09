@@ -1,7 +1,7 @@
 #ifndef __MAPALTAS_H__
 #define __MAPALTAS_H__
 #include "../include/Map.hpp"
-#include "../include/KeyFrame.hpp"
+#include "../include/Frame.hpp"
 #include "../include/MapPoint.hpp"
 namespace ORBSLAM
 {
