@@ -14,6 +14,7 @@ using namespace cv;
 using namespace std;
 namespace ORBSLAM
 {
+    class Frame;
     class MyExtractorNode
     {
     public:

@@ -201,9 +201,9 @@ namespace ORBSLAM
         // cout << "E21:" << E21 << endl;
         Mat R1, R2, t;
         DecomposeE(E21, R1, R2, t);
-        cout << "R1:" << R1 << endl;
-        cout << "R2:" << R2 << endl;
-        cout << "t:" << t << endl;
+        // cout << "R1:" << R1 << endl;
+        // cout << "R2:" << R2 << endl;
+        // cout << "t:" << t << endl;
         vector<Point3f> vp3f_1, vp3f_2, vp3f_3, vp3f_4;
         vector<bool> vb_triangulated1, vb_triangulated2, vb_triangulated3, vb_triangulated4;
         float parallax1, parallax2, parallax3, parallax4;
@@ -246,6 +246,7 @@ namespace ORBSLAM
         }
         if (max_good < min_good || nsimilar > 1)
         {
+            cout<<"find two similar!"<<endl;
             return false;
         }
 

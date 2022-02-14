@@ -20,6 +20,13 @@ namespace ORBSLAM
     {
     }
 
+    /**
+     * @description: 
+     * @param v_kps1 keypoints
+     * @param v_kps2
+     * @param v_matches12
+     * @return {*}
+     */
     bool Track::Mono_initial_two_frame(vector<KeyPoint> &v_kps1, vector<KeyPoint> &v_kps2, vector<int> &v_matches12, Mat &R21, Mat &t21, vector<Point3f> &vp3f, vector<bool> &vb_triangulated)
     {
         vector<Match> matches12;

@@ -265,6 +265,11 @@ static int bit_pattern_31_[256 * 4] =
 
 namespace ORBSLAM
 {
+    vector<double> Frame::mvd_scale_factor;
+    vector<double> Frame::mvd_level_sigma2;
+    vector<double> Frame::mvd_inv_scale_factor;
+    vector<double> Frame::mvd_inv_level_sigma2;
+    int Frame::mi_nlevel;
     ORBFeature::ORBFeature(double scale, int nlevel)
     {
         compute_pyramid_scale_info(scale, nlevel);
@@ -340,6 +345,11 @@ namespace ORBSLAM
             mvd_level_sigma2[i] = mvd_scale_factor[i] * scale_factor;
             mvd_inv_level_sigma2[i] = mvd_inv_scale_factor[i] / scale_factor;
         }
+        Frame::mi_nlevel = nlevel;
+        Frame::mvd_scale_factor = mvd_scale_factor;
+        Frame::mvd_level_sigma2 = mvd_level_sigma2;
+        Frame::mvd_inv_scale_factor = mvd_inv_scale_factor;
+        Frame::mvd_inv_level_sigma2 = mvd_inv_level_sigma2;
     }
 
     void MyExtractorNode::DivideNode(MyExtractorNode &n1, MyExtractorNode &n2, MyExtractorNode &n3, MyExtractorNode &n4)

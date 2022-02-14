@@ -5,6 +5,7 @@ using namespace std;
 using namespace cv;
 namespace ORBSLAM
 {
+    class Frame;
     class Matcher
     {
     private:

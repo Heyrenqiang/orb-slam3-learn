@@ -4,6 +4,7 @@ using namespace std;
 using namespace cv;
 namespace ORBSLAM
 {
+    long unsigned int KeyFrame::sm_curid = 0;
     bool Frame::mb_initial_image_bound = true;
     float Frame::mf_grid_element_width_inv;
     float Frame::mf_grid_element_height_inv;
@@ -12,10 +13,19 @@ namespace ORBSLAM
     float Frame::mf_box_maxx;
     float Frame::mf_box_maxy;
     Frame::Frame() {}
-    KeyFrame::KeyFrame() {}
+    KeyFrame::KeyFrame()
+    {
+        mb_bad = false;
+        mi_id = sm_curid++;
+        mb_first_connect = true;
+    }
+    void KeyFrame::Init_keyframe()
+    {
+        mvp_mappoints = vector<MapPoint *>(mi_feature_num, static_cast<MapPoint *>(nullptr));
+    }
     Frame::Frame(const Mat &im, ORBFeature *orbfeature, int feature_num_to_extract)
     {
-        m_image = im.clone();
+        // m_image = im.clone();
         orbfeature->extract_orb_compute_descriptor(im, feature_num_to_extract, mv_orb_keypoints, mm_descriptors);
         mi_feature_num = mv_orb_keypoints.size();
         cout << "feature num:" << mi_feature_num << endl;
@@ -130,6 +140,9 @@ namespace ORBSLAM
         mm_tcw = mm_Tcw.rowRange(0, 3).col(3);
         mm_Rwc = mm_Rcw.t();
         mm_twc = -mm_Rwc * mm_tcw;
+        mm_Twc = Mat::eye(4, 4, CV_32F);
+        mm_Rwc.copyTo(mm_Twc.rowRange(0, 3).colRange(0, 3));
+        mm_twc.copyTo(mm_Twc.rowRange(0, 3).col(3));
     }
 
     void KeyFrame::Compute_bow()
@@ -137,9 +150,77 @@ namespace ORBSLAM
     }
     void KeyFrame::Add_mappoint(MapPoint *p_mappoint, int &idx)
     {
+        mvp_mappoints[idx] = p_mappoint;
     }
     void KeyFrame::Update_connections()
     {
+        map<KeyFrame *, int> KF_counter;
+        for (vector<MapPoint *>::iterator vit = mvp_mappoints.begin(); vit != mvp_mappoints.end(); vit++)
+        {
+            MapPoint *pmp = *vit;
+            if (!pmp)
+            {
+                continue;
+            }
+            if (pmp->mb_bad)
+            {
+                continue;
+            }
+            map<KeyFrame *, int> observations = pmp->mmap_observation;
+            for (map<KeyFrame *, int>::iterator mit = observations.begin(); mit != observations.end(); mit++)
+            {
+                if (mit->first->mi_id == this->mi_id || mit->first->mb_bad || mit->first->mp_map != this->mp_map)
+                {
+                    continue;
+                }
+                KF_counter[mit->first]++;
+            }
+        }
+        if (KF_counter.empty())
+        {
+            return;
+        }
+        int nmax = 0;
+        KeyFrame *pKFmax = NULL;
+        // TODO
+        int th = 15;
+        vector<pair<int, KeyFrame *>> v_pair;
+        v_pair.reserve(KF_counter.size());
+        for (map<KeyFrame *, int>::iterator mit = KF_counter.begin(); mit != KF_counter.end(); mit++)
+        {
+            if (mit->second > nmax)
+            {
+                nmax = mit->second;
+                pKFmax = mit->first;
+            }
+            if (mit->second > th)
+            {
+                v_pair.push_back(make_pair(mit->second, mit->first));
+                (mit->first)->Add_connection(this, mit->second);
+            }
+        }
+        if (v_pair.empty())
+        {
+            v_pair.push_back(make_pair(nmax, pKFmax));
+            pKFmax->Add_connection(this, nmax);
+        }
+        sort(v_pair.begin(), v_pair.end());
+        list<KeyFrame *> l_KF;
+        list<int> l_weights;
+        for (int i = 0; i < v_pair.size(); i++)
+        {
+            l_KF.push_front(v_pair[i].second);
+            l_weights.push_front(v_pair[i].first);
+        }
+        mmap_KF_connection_weight = KF_counter;
+        mv_ordered_KF = vector<KeyFrame *>(l_KF.begin(), l_KF.end());
+        mv_ordered_weight = vector<int>(l_weights.begin(), l_weights.end());
+        if (mb_first_connect && mi_id != mp_map->mi_iniKF_id)
+        {
+            mp_parent = mv_ordered_KF.front();
+            mp_parent->Add_child(this);
+            mb_first_connect = false;
+        }
     }
     set<MapPoint *> KeyFrame::Get_mappoints()
     {
@@ -175,6 +256,52 @@ namespace ORBSLAM
     }
     vector<MapPoint *> KeyFrame::Get_vect_mappoints()
     {
+    }
+    void KeyFrame::Set_map(Map *p_map)
+    {
+        mp_map = p_map;
+    }
+    void KeyFrame::Add_connection(KeyFrame *pKF, int weight)
+    {
+        if (!mmap_KF_connection_weight.count(pKF))
+        {
+            mmap_KF_connection_weight[pKF] = weight;
+        }
+        else if (mmap_KF_connection_weight[pKF] != weight)
+        {
+            mmap_KF_connection_weight[pKF] = weight;
+        }
+        else
+        {
+            return;
+        }
+        Update_best_covisibles();
+    }
+    void KeyFrame::Add_child(KeyFrame *pKF)
+    {
+        msp_children.insert(pKF);
+    }
+    void KeyFrame::Update_best_covisibles()
+    {
+        vector<pair<int, KeyFrame *>> v_pair;
+        v_pair.reserve(mmap_KF_connection_weight.size());
+        for (map<KeyFrame *, int>::iterator mit = mmap_KF_connection_weight.begin(); mit != mmap_KF_connection_weight.end(); mit++)
+        {
+            v_pair.push_back(make_pair(mit->second, mit->first));
+        }
+        sort(v_pair.begin(), v_pair.end());
+        list<KeyFrame *> l_KF;
+        list<int> l_weight;
+        for (int i = 0; i < v_pair.size(); i++)
+        {
+            if (!v_pair[i].second->mb_bad)
+            {
+                l_KF.push_front(v_pair[i].second);
+                l_weight.push_front(v_pair[i].first);
+            }
+        }
+        mv_ordered_KF = vector<KeyFrame *>(l_KF.begin(), l_KF.end());
+        mv_ordered_weight = vector<int>(l_weight.begin(), l_weight.end());
     }
 
 }

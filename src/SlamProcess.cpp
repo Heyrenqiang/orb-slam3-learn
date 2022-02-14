@@ -1,5 +1,5 @@
 #include "../include/SlamProcess.hpp"
-#define _DEBUG
+// #define _DEBUG
 namespace ORBSLAM
 {
     SlamProcess::SlamProcess(/* args */)
@@ -10,8 +10,10 @@ namespace ORBSLAM
         mp_tracker = new Track();
         mp_param = new Param();
         mp_tracker->Set_param(mp_param);
-        std::string filepath = "/home/heyrenqiang/data/Vocabulary/ORBvoc.txt.tar.gz";
-        mp_vocaburary = new DBoW3::Vocabulary(filepath);
+        std::string filepath = "/home/heyrenqiang/vscode/test/data/ORBvoc.txt";
+        mp_vocaburary = new DBoW3::Vocabulary();
+        // mp_vocaburary->load(filepath);
+        mp_mapatlas = new MapAtlas();
 
         mb_mono_initialized = false;
         mb_initial_frame_ready = false;
@@ -94,14 +96,21 @@ namespace ORBSLAM
 
     void SlamProcess::Create_momo_initial_map()
     {
+        mp_mapatlas->Creat_map();
+        Map * cur_map = mp_mapatlas->Get_current_map();
         KeyFrame *pkF_ini = new KeyFrame();
         KeyFrame *pkF_cur = new KeyFrame();
-        swap(*((Frame*)pkF_ini),mF_initial_frame);
-        swap(*((Frame*)pkF_cur),mF_curframe);
+        swap(*((Frame *)pkF_ini), mF_initial_frame);
+        swap(*((Frame *)pkF_cur), mF_curframe);
+        pkF_ini->Init_keyframe();
+        pkF_cur->Init_keyframe();
+
+        pkF_ini->Set_map(cur_map);
+        pkF_cur->Set_map(cur_map);
         Compute_bow(pkF_ini);
         Compute_bow(pkF_cur);
-        mp_mapatlas->Add_key_frame(pkF_ini);
-        mp_mapatlas->Add_key_frame(pkF_cur);
+        cur_map->Add_key_frame(pkF_ini);
+        cur_map->Add_key_frame(pkF_cur);
         for (int i = 0; i < mvi_initial_matches.size(); i++)
         {
             if (mvi_initial_matches[i] < 0)
@@ -109,39 +118,44 @@ namespace ORBSLAM
                 continue;
             }
             Mat world_pose(mvp3f_initial3d[i]);
-            MapPoint *p_mappoint = new MapPoint(world_pose, pkF_cur, mp_mapatlas->Get_current_map());
+            MapPoint *p_mappoint = new MapPoint(world_pose);
+            p_mappoint->Set_ref_keframe(pkF_cur);
+            p_mappoint->Set_map(cur_map);
             pkF_ini->Add_mappoint(p_mappoint, i);
             pkF_cur->Add_mappoint(p_mappoint, mvi_initial_matches[i]);
             p_mappoint->Add_observation(pkF_ini, i);
             p_mappoint->Add_observation(pkF_cur, mvi_initial_matches[i]);
-            p_mappoint->Compute_distinctive_descriptors();
+            p_mappoint->Compute_distinctive_descriptors(mp_matcher);
             p_mappoint->Update_normal_and_depth();
-            mF_curframe.mvp_mappoints[mvi_initial_matches[i]] = p_mappoint;
-            mF_curframe.mvb_outline[mvi_initial_matches[i]] = false;
-            mp_mapatlas->Add_mappoint(p_mappoint);
+            // mF_curframe.mvp_mappoints[mvi_initial_matches[i]] = p_mappoint;
+            // mF_curframe.mvb_outline[mvi_initial_matches[i]] = false;
+            cur_map->Add_mappoint(p_mappoint);
         }
 
         pkF_ini->Update_connections();
         pkF_cur->Update_connections();
         // set<MapPoint*> sp_mappoints;
         // sp_mappoints = pkF_ini->Get_mappoints();
-        Optimizer::Global_bundle_adjustment(mp_mapatlas->Get_current_map(),20);
+        Optimizer::Global_bundle_adjustment(cur_map, 20);
         float median_depth = pkF_ini->Compute_scene_median_depth(2);
         float inv_median_depth;
-        inv_median_depth = 4.0f/median_depth;
-        if(median_depth<0||pkF_cur->Tracked_mappoints(1)<50){
+        inv_median_depth = 4.0f / median_depth;
+        if (median_depth < 0 || pkF_cur->Tracked_mappoints(1) < 50)
+        {
             Reset_active_map();
             return;
         }
         Mat Tcw = pkF_cur->Get_pose();
-        Tcw.rowRange(0,3).col(3) = Tcw.col(3).rowRange(0,3)*inv_median_depth;
+        Tcw.rowRange(0, 3).col(3) = Tcw.col(3).rowRange(0, 3) * inv_median_depth;
         pkF_cur->Set_pose(Tcw);
 
-        vector<MapPoint*> vp_all_mappoints = pkF_ini->Get_vect_mappoints();
-        for(int i=0;i<vp_all_mappoints.size();i++){
-            if(vp_all_mappoints[i]){
-                MapPoint * p_mp = vp_all_mappoints[i];
-                p_mp->Set_world_pose(p_mp->Get_world_pose()*inv_median_depth);
+        vector<MapPoint *> vp_all_mappoints = pkF_ini->Get_vect_mappoints();
+        for (int i = 0; i < vp_all_mappoints.size(); i++)
+        {
+            if (vp_all_mappoints[i])
+            {
+                MapPoint *p_mp = vp_all_mappoints[i];
+                p_mp->Set_world_pose(p_mp->Get_world_pose() * inv_median_depth);
                 p_mp->Update_normal_and_depth();
             }
         }
@@ -153,20 +167,18 @@ namespace ORBSLAM
         mvp_keyframe.push_back(pkF_cur);
         mvp_keyframe.push_back(pkF_ini);
         me_state = OK;
-
-
     }
-    
-    void SlamProcess::Reset_active_map() 
+
+    void SlamProcess::Reset_active_map()
     {
-        
     }
-    
-    void SlamProcess::Compute_bow(KeyFrame* pkf) 
+
+    void SlamProcess::Compute_bow(KeyFrame *pkf)
     {
         vector<Mat> v_cur_desc = Converter::toDescriptorVector(pkf->mm_descriptors);
-        mp_vocaburary->transform(v_cur_desc,pkf->mv_bowvector,pkf->mv_featurevector,4);
+        mp_vocaburary->transform(v_cur_desc, pkf->mv_bowvector, pkf->mv_featurevector, 4);
+        cout << "bow vector size:" << pkf->mv_bowvector.size() << endl;
+        cout << "feature vector size:" << pkf->mv_featurevector.size() << endl;
     }
-
 
 }

@@ -14,6 +14,7 @@
 #include "../include/LocalMap.hpp"
 #include <DBoW3/DBoW3.h>
 #include "../include/Converter.hpp"
+#include "../include/MapAtlas.hpp"
 using namespace std;
 using namespace cv;
 namespace ORBSLAM
